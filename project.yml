@@ -1,0 +1,36 @@
+name: TranslateSnap
+options:
+  bundleIdPrefix: com.translatesnap
+  deploymentTarget:
+    macOS: "13.0"
+  xcodeVersion: "16"
+
+settings:
+  base:
+    PRODUCT_NAME: TranslateSnap
+    SWIFT_VERSION: "5.9"
+    MACOSX_DEPLOYMENT_TARGET: "13.0"
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: ""
+
+targets:
+  TranslateSnap:
+    type: application
+    platform: macOS
+    deploymentTarget: "13.0"
+    sources:
+      - path: TranslateSnap
+        excludes:
+          - "**/*.md"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.translatesnap.app
+        INFOPLIST_FILE: TranslateSnap/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_ENTITLEMENTS: TranslateSnap/TranslateSnap.entitlements
+        ENABLE_HARDENED_RUNTIME: YES
+    entitlements:
+      path: TranslateSnap/TranslateSnap.entitlements
+      properties:
+        com.apple.security.app-sandbox: false
+        com.apple.security.network.client: true

@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(open *)",
+      "Bash(kill -9 64520 67136)",
+      "Bash(/Users/xulei/Library/Developer/Xcode/DerivedData/TranslateSnap-aqwpvmdwkubnqvcyoksnmrahricc/Build/Products/Debug/TranslateSnap.app/Contents/MacOS/TranslateSnap)",
+      "Bash(log show *)",
+      "Bash(/usr/bin/log show *)",
+      "Bash(kill -9 84644)",
+      "Bash(xcodebuild -project TranslateSnap.xcodeproj -scheme TranslateSnap -configuration Debug build)",
+      "Read(//Users/xulei/Documents/TranslateSnap.app/**)",
+      "Read(//Users/xulei/Documents/**)",
+      "Bash(xcodegen --version)",
+      "Bash(rm -rf ~/Documents/TranslateSnap.app)",
+      "Bash(cp -R /Users/xulei/Library/Developer/Xcode/DerivedData/TranslateSnap-aqwpvmdwkubnqvcyoksnmrahricc/Build/Products/Debug/TranslateSnap.app ~/Documents/TranslateSnap.app)",
+      "Bash(cp -R /Users/xulei/Library/Developer/Xcode/DerivedData/TranslateSnap-aqwpvmdwkubnqvcyoksnmrahricc/Build/Products/Debug/TranslateSnap.app ~/projects/agents-a0308b2d01.app)",
+      "Bash(mkdir -p ~/Documents)",
+      "Bash(/usr/sbin/screencapture -i /tmp/translatesnap_test.png)",
+      "Read(//tmp/**)",
+      "Bash(sips --getProperty all /tmp/translatesnap_test.png)",
+      "Bash(gh auth *)",
+      "Bash(gh repo *)",
+      "Bash(xcodegen generate *)",
+      "Bash(xcodebuild -project TranslateSnap.xcodeproj -scheme TranslateSnap -configuration Release build)",
+      "Bash(git init *)",
+      "Bash(git remote *)",
+      "Bash(git branch *)",
+      "Bash(git add *)",
+      "Bash(git rm *)",
+      "Bash(echo \".claude/\")",
+      "Bash(git reset *)"
+    ]
+  }
+}
