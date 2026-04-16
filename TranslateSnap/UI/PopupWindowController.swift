@@ -41,13 +41,20 @@ class PopupWindowController {
         panel.level = .floating
         panel.backgroundColor = .clear
         panel.isOpaque = false
-        panel.hasShadow = false
+        panel.hasShadow = true
 
         let popupView = StreamPopupView(viewModel: viewModel)
         let hostingView = NSHostingView(rootView: popupView)
         hostingView.frame = panel.contentView!.bounds
         hostingView.autoresizingMask = [NSView.AutoresizingMask.width, NSView.AutoresizingMask.height]
         panel.contentView?.addSubview(hostingView)
+
+        // 在 layer 层做圆角，比 SwiftUI clipShape 更可靠
+        if let contentView = panel.contentView {
+            contentView.wantsLayer = true
+            contentView.layer?.cornerRadius = 12
+            contentView.layer?.masksToBounds = true
+        }
 
         let maxHeight: CGFloat = 500
         let fittingSize = hostingView.fittingSize

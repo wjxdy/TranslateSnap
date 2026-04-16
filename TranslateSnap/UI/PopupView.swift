@@ -67,8 +67,6 @@ struct StreamPopupView: View {
         }
         .frame(minWidth: 360, idealWidth: 400, maxWidth: 480)
         .background(Color(.windowBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .shadow(color: .black.opacity(0.18), radius: 16, x: 0, y: 6)
     }
 
     private var translationSection: some View {
