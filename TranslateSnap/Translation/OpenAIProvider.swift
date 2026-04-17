@@ -47,10 +47,8 @@ class OpenAIProvider: TranslationProvider {
               let content = message["content"] as? String else {
             throw TranslationError.parseError
         }
-        let parts = content.components(separatedBy: "\n---\n")
-        let translation = parts[0].trimmingCharacters(in: .whitespacesAndNewlines)
-        let explanation = parts.count > 1 ? parts[1].trimmingCharacters(in: .whitespacesAndNewlines) : nil
-        return TranslationResult(original: request.text, translation: translation, explanation: explanation)
+        let translation = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        return TranslationResult(original: request.text, translation: translation, explanation: nil)
     }
 
     func translateStream(_ request: TranslationRequest) -> AsyncThrowingStream<String, Error> {
