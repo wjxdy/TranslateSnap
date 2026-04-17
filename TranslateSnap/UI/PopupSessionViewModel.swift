@@ -73,16 +73,32 @@ final class PopupSessionViewModel: ObservableObject {
         let stream = provider.translateStream(request)
         let id = tab.id
         tasks[id] = Task { [weak self] in
+            var buffer = ""
+            var lastFlush = Date()
+            let flushInterval: TimeInterval = 0.08
+
+            func flushBuffer() async {
+                guard !buffer.isEmpty else { return }
+                let toFlush = buffer
+                buffer = ""
+                await MainActor.run {
+                    guard var s = self?.states[id] else { return }
+                    if s.isLoading { s.isLoading = false }
+                    s.text.append(toFlush)
+                    self?.states[id] = s
+                }
+            }
+
             do {
                 for try await chunk in stream {
                     try Task.checkCancellation()
-                    await MainActor.run {
-                        guard var s = self?.states[id] else { return }
-                        if s.isLoading { s.isLoading = false }
-                        s.text.append(chunk)
-                        self?.states[id] = s
+                    buffer.append(chunk)
+                    if Date().timeIntervalSince(lastFlush) >= flushInterval {
+                        await flushBuffer()
+                        lastFlush = Date()
                     }
                 }
+                await flushBuffer()
                 await MainActor.run {
                     guard var s = self?.states[id] else { return }
                     s.isLoading = false
