@@ -2,13 +2,14 @@ import SwiftUI
 
 struct SettingsView: View {
     enum Tab: String, CaseIterable {
-        case general, translation, shortcuts, api
+        case general, translation, shortcuts, prompts, api
 
         var label: String {
             switch self {
             case .general: return "通用"
             case .translation: return "翻译"
             case .shortcuts: return "快捷键"
+            case .prompts: return "提示词"
             case .api: return "API"
             }
         }
@@ -18,6 +19,7 @@ struct SettingsView: View {
             case .general: return "gearshape"
             case .translation: return "globe"
             case .shortcuts: return "keyboard"
+            case .prompts: return "text.bubble"
             case .api: return "key"
             }
         }
@@ -38,6 +40,7 @@ struct SettingsView: View {
                     case .general: GeneralSettingsView()
                     case .translation: TranslationSettingsView()
                     case .shortcuts: ShortcutsSettingsView()
+                    case .prompts: PromptsSettingsView()
                     case .api: APISettingsView()
                     }
                 }

@@ -3,20 +3,6 @@ import SwiftUI
 import AppKit
 import Carbon.HIToolbox
 
-enum PopupMode: String, CaseIterable {
-    case compact = "compact"
-    case full = "full"
-    case expandable = "expandable"
-
-    var displayName: String {
-        switch self {
-        case .compact: return "精简"
-        case .full: return "完整"
-        case .expandable: return "可展开"
-        }
-    }
-}
-
 enum PopupPositionMode: String, CaseIterable {
     case fixed = "fixed"
     case followCursor = "followCursor"
@@ -81,7 +67,6 @@ class AppSettings: ObservableObject {
     static let shared = AppSettings()
 
     @AppStorage("targetLanguage") var targetLanguage: String = "简体中文"
-    @AppStorage("popupMode") var popupModeRaw: String = PopupMode.expandable.rawValue
     @AppStorage("translationStyle") var translationStyleRaw: String = TranslationStyle.professional.rawValue
     @AppStorage("showOriginal") var showOriginal: Bool = true
     // 截图翻译快捷键: 默认 ⌘⇧1 (keyCode 18)
@@ -100,11 +85,6 @@ class AppSettings: ObservableObject {
     @AppStorage("fixedPositionY") var fixedPositionY: Double = .nan
     @AppStorage("defaultPinned") var defaultPinned: Bool = false
     @AppStorage("promptTabsJSON") var promptTabsJSON: String = ""
-
-    var popupMode: PopupMode {
-        get { PopupMode(rawValue: popupModeRaw) ?? .expandable }
-        set { popupModeRaw = newValue.rawValue }
-    }
 
     var translationStyle: TranslationStyle {
         get { TranslationStyle(rawValue: translationStyleRaw) ?? .professional }

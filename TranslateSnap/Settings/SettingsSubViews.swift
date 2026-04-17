@@ -3,30 +3,48 @@ import ServiceManagement
 
 struct GeneralSettingsView: View {
     @AppStorage("targetLanguage") private var targetLanguage = "简体中文"
-    @AppStorage("popupMode") private var popupModeRaw = PopupMode.expandable.rawValue
+    @AppStorage("popupPositionMode") private var positionModeRaw = PopupPositionMode.fixed.rawValue
+    @AppStorage("defaultPinned") private var defaultPinned = false
     @AppStorage("launchAtLogin") private var launchAtLogin = false
+    @ObservedObject private var settings = AppSettings.shared
 
     private let languages = ["简体中文", "繁體中文", "English", "日本語", "한국어", "Français", "Deutsch", "Español"]
 
     var body: some View {
         Form {
-            Picker("目标语言", selection: $targetLanguage) {
-                ForEach(languages, id: \.self) { Text($0).tag($0) }
-            }
-
-            Picker("弹窗模式", selection: $popupModeRaw) {
-                ForEach(PopupMode.allCases, id: \.rawValue) {
-                    Text($0.displayName).tag($0.rawValue)
+            Section("语言") {
+                Picker("目标语言", selection: $targetLanguage) {
+                    ForEach(languages, id: \.self) { Text($0).tag($0) }
                 }
             }
 
-            Toggle("开机启动", isOn: $launchAtLogin)
-                .onChange(of: launchAtLogin) { newValue in
-                    if #available(macOS 13.0, *) {
-                        let service = SMAppService.mainApp
-                        try? newValue ? service.register() : service.unregister()
+            Section("弹窗") {
+                Picker("位置模式", selection: $positionModeRaw) {
+                    ForEach(PopupPositionMode.allCases, id: \.rawValue) {
+                        Text($0.displayName).tag($0.rawValue)
                     }
                 }
+                if PopupPositionMode(rawValue: positionModeRaw) == .fixed,
+                   settings.savedFixedPosition != nil {
+                    Button("重置位置（回到默认中上位置）") {
+                        settings.setSavedFixedPosition(nil)
+                    }
+                }
+                Toggle("默认钉住弹窗", isOn: $defaultPinned)
+                Text("钉住后点击外部与 ESC 都不会关闭；大头针按钮可在弹窗里切换。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("启动") {
+                Toggle("开机启动", isOn: $launchAtLogin)
+                    .onChange(of: launchAtLogin) { newValue in
+                        if #available(macOS 13.0, *) {
+                            let service = SMAppService.mainApp
+                            try? newValue ? service.register() : service.unregister()
+                        }
+                    }
+            }
         }
         .formStyle(.grouped)
         .padding()
