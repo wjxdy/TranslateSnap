@@ -7,8 +7,6 @@ struct GeneralSettingsView: View {
     @AppStorage("defaultPinned") private var defaultPinned = false
     @AppStorage("showOriginal") private var showOriginal = true
     @AppStorage("launchAtLogin") private var launchAtLogin = false
-    @AppStorage("popupWidth") private var popupWidth: Double = 400
-    @AppStorage("popupHeight") private var popupHeight: Double = 400
     @ObservedObject private var settings = AppSettings.shared
 
     private let languages = ["简体中文", "繁體中文", "English", "日本語", "한국어", "Français", "Deutsch", "Español"]
@@ -38,21 +36,6 @@ struct GeneralSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Toggle("显示原文", isOn: $showOriginal)
-                HStack {
-                    Text("默认宽度")
-                    Stepper(value: $popupWidth, in: 300...800, step: 20) {
-                        Text("\(Int(popupWidth)) pt")
-                    }
-                }
-                HStack {
-                    Text("默认高度")
-                    Stepper(value: $popupHeight, in: 200...700, step: 20) {
-                        Text("\(Int(popupHeight)) pt")
-                    }
-                }
-                Button("重置尺寸") {
-                    settings.resetPopupSize()
-                }
             }
 
             Section("启动") {

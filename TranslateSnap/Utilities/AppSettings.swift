@@ -69,8 +69,6 @@ class AppSettings: ObservableObject {
     @AppStorage("fixedPositionX") var fixedPositionX: Double = .nan
     @AppStorage("fixedPositionY") var fixedPositionY: Double = .nan
     @AppStorage("defaultPinned") var defaultPinned: Bool = false
-    @AppStorage("popupWidth") var popupWidth: Double = 400
-    @AppStorage("popupHeight") var popupHeight: Double = 400
     @AppStorage("promptTabsJSON") var promptTabsJSON: String = ""
 
     var aiProvider: AIProvider {
@@ -106,20 +104,6 @@ class AppSettings: ObservableObject {
             fixedPositionX = .nan
             fixedPositionY = .nan
         }
-    }
-
-    var popupSize: NSSize {
-        NSSize(width: popupWidth, height: popupHeight)
-    }
-
-    func setPopupSize(_ size: NSSize) {
-        popupWidth = Double(size.width)
-        popupHeight = Double(size.height)
-    }
-
-    func resetPopupSize() {
-        popupWidth = 400
-        popupHeight = 400
     }
 
     var promptTabs: [PromptTab] {

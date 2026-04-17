@@ -41,7 +41,7 @@ struct PopupRootView: View {
                     .padding(16)
                 }
                 .onChange(of: viewModel.states) { _ in
-                    withAnimation { proxy.scrollTo("bottom") }
+                    proxy.scrollTo("bottom")
                 }
             }
             .frame(maxHeight: 400)

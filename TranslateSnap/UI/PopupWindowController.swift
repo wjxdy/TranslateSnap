@@ -9,8 +9,6 @@ final class PopupWindowController {
     private var session: PopupSessionViewModel?
     private var eventMonitor: Any?
     private var moveObserver: NSObjectProtocol?
-    private var resizeObserver: NSObjectProtocol?
-
     var isPinned: Bool { session?.pinned ?? false }
 
     func show(session: PopupSessionViewModel) {
@@ -19,7 +17,7 @@ final class PopupWindowController {
 
         let panel = NSPanel(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 240),
-            styleMask: [.borderless, .nonactivatingPanel, .resizable],
+            styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
@@ -47,9 +45,10 @@ final class PopupWindowController {
             cv.layer?.masksToBounds = true
         }
 
-        let size = AppSettings.shared.popupSize
+        let maxHeight: CGFloat = 500
+        let fitting = hosting.fittingSize
+        let size = NSSize(width: fitting.width, height: min(fitting.height, maxHeight))
         panel.setContentSize(size)
-        panel.contentMinSize = NSSize(width: 300, height: 200)
 
         let origin = computeOrigin(windowSize: size)
         panel.setFrameOrigin(origin)
@@ -65,14 +64,6 @@ final class PopupWindowController {
             Task { @MainActor in self?.handleDidMove() }
         }
 
-        resizeObserver = NotificationCenter.default.addObserver(
-            forName: NSWindow.didResizeNotification,
-            object: panel,
-            queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor in self?.handleDidResize() }
-        }
-
         self.panel = panel
         HotkeyManager.shared.activePopupController = self
     }
@@ -82,10 +73,6 @@ final class PopupWindowController {
         if let obs = moveObserver {
             NotificationCenter.default.removeObserver(obs)
             moveObserver = nil
-        }
-        if let obs = resizeObserver {
-            NotificationCenter.default.removeObserver(obs)
-            resizeObserver = nil
         }
         removeGlobalMouseDownMonitor()
         panel?.orderOut(nil)
@@ -151,11 +138,6 @@ final class PopupWindowController {
         let x = max(frame.minX + 8, min(origin.x, frame.maxX - size.width - 8))
         let y = max(frame.minY + 8, min(origin.y, frame.maxY - size.height - 8))
         return NSPoint(x: x, y: y)
-    }
-
-    private func handleDidResize() {
-        guard let panel = panel else { return }
-        AppSettings.shared.setPopupSize(panel.frame.size)
     }
 
     private func handleDidMove() {
