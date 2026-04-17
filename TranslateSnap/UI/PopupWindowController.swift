@@ -9,7 +9,32 @@ final class PopupWindowController {
     private var session: PopupSessionViewModel?
     private var eventMonitor: Any?
     private var moveObserver: NSObjectProtocol?
+    private var resizeStartSize: NSSize?
+    private var resizeStartTop: CGFloat?
     var isPinned: Bool { session?.pinned ?? false }
+
+    func resizeBy(dx: CGFloat, dy: CGFloat) {
+        guard let panel = panel else { return }
+        let frame = panel.frame
+        if resizeStartSize == nil {
+            resizeStartSize = frame.size
+            resizeStartTop = frame.origin.y + frame.size.height
+        }
+        guard let base = resizeStartSize, let top = resizeStartTop else { return }
+        let minW: CGFloat = 280, minH: CGFloat = 160, maxW: CGFloat = 900, maxH: CGFloat = 900
+        let w = min(max(minW, base.width + dx), maxW)
+        let h = min(max(minH, base.height + dy), maxH)
+        var newFrame = frame
+        newFrame.size = NSSize(width: w, height: h)
+        // 保持顶部位置不变（用户拖右下角，预期左上角不动）
+        newFrame.origin.y = top - h
+        panel.setFrame(newFrame, display: true, animate: false)
+    }
+
+    func resizeCommit() {
+        resizeStartSize = nil
+        resizeStartTop = nil
+    }
 
     func show(session: PopupSessionViewModel) {
         close()
@@ -17,7 +42,7 @@ final class PopupWindowController {
 
         let panel = NSPanel(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 240),
-            styleMask: [.borderless, .nonactivatingPanel],
+            styleMask: [.borderless, .nonactivatingPanel, .resizable],
             backing: .buffered,
             defer: false
         )

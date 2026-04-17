@@ -44,15 +44,49 @@ struct PopupRootView: View {
                     proxy.scrollTo("bottom")
                 }
             }
-            .frame(maxHeight: 400)
         }
-        .frame(minWidth: 360, idealWidth: 400, maxWidth: 480)
+        .frame(minWidth: 280, idealWidth: 400)
         .background(Color(.windowBackgroundColor))
+        .overlay(alignment: .bottomTrailing) {
+            ResizeHandle()
+        }
         .onAppear {
             viewModel.start()
         }
         .onChange(of: viewModel.pinned) { newValue in
             PopupWindowController.shared.pinStateDidChange(newValue)
         }
+    }
+}
+
+/// 右下角可拖动手柄，用于调整弹窗大小（top-left 保持不动）
+struct ResizeHandle: View {
+    var body: some View {
+        Image(systemName: "arrow.up.left.and.arrow.down.right")
+            .font(.system(size: 9, weight: .semibold))
+            .foregroundStyle(.tertiary)
+            .rotationEffect(.degrees(90))
+            .padding(6)
+            .frame(width: 20, height: 20)
+            .contentShape(Rectangle())
+            .onHover { inside in
+                if inside {
+                    NSCursor.crosshair.push()
+                } else {
+                    NSCursor.pop()
+                }
+            }
+            .gesture(
+                DragGesture(minimumDistance: 0, coordinateSpace: .local)
+                    .onChanged { value in
+                        PopupWindowController.shared.resizeBy(
+                            dx: value.translation.width,
+                            dy: value.translation.height
+                        )
+                    }
+                    .onEnded { _ in
+                        PopupWindowController.shared.resizeCommit()
+                    }
+            )
     }
 }

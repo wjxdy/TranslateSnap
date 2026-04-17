@@ -132,17 +132,22 @@ class AppSettings: ObservableObject {
                 }
                 return defaults
             }
-            // 迁移：补齐缺失的内置标签（按固定 UUID 去重）；用户主动删除过的内置跳过。
+            // 迁移 1：清理旧版本产生的"随机 UUID 内置"（isBuiltin=true 但 UUID 不在当前内置集合里）
+            let knownBuiltinIDs = Set(PromptTab.builtinDefaults.map { $0.id })
+            let before = tabs.count
+            tabs.removeAll { $0.isBuiltin && !knownBuiltinIDs.contains($0.id) }
+            var dirty = tabs.count != before
+
+            // 迁移 2：补齐缺失的内置标签（按固定 UUID 去重）；用户主动删除过的内置跳过。
             let existingIDs = Set(tabs.map { $0.id })
             let deleted = deletedBuiltinIDs
-            var appended = false
             for builtin in PromptTab.builtinDefaults
                 where !existingIDs.contains(builtin.id) && !deleted.contains(builtin.id)
             {
                 tabs.append(builtin)
-                appended = true
+                dirty = true
             }
-            if appended,
+            if dirty,
                let data = try? JSONEncoder().encode(tabs),
                let s = String(data: data, encoding: .utf8) {
                 promptTabsJSON = s
