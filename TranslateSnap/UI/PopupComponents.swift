@@ -58,7 +58,6 @@ struct TabCard: View {
     let tab: PromptTab
     let state: PopupSessionViewModel.TabState
     let onRetry: () -> Void
-    @State private var synthesizer = AVSpeechSynthesizer()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -105,7 +104,7 @@ struct TabCard: View {
             }
         }
         .onDisappear {
-            synthesizer.stopSpeaking(at: .immediate)
+            SpeechService.shared.stop()
         }
     }
 
@@ -115,8 +114,7 @@ struct TabCard: View {
     }
 
     private func speak() {
-        synthesizer.stopSpeaking(at: .immediate)
-        synthesizer.speak(AVSpeechUtterance(string: state.text))
+        SpeechService.shared.speak(state.text, language: AppSettings.shared.targetLanguage)
     }
 }
 

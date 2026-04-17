@@ -7,6 +7,7 @@ struct GeneralSettingsView: View {
     @AppStorage("defaultPinned") private var defaultPinned = false
     @AppStorage("showOriginal") private var showOriginal = true
     @AppStorage("launchAtLogin") private var launchAtLogin = false
+    @AppStorage("speechEngine") private var speechEngineRaw = SpeechEngine.google.rawValue
     @ObservedObject private var settings = AppSettings.shared
 
     private let languages = ["简体中文", "繁體中文", "English", "日本語", "한국어", "Français", "Deutsch", "Español"]
@@ -36,6 +37,17 @@ struct GeneralSettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Toggle("显示原文", isOn: $showOriginal)
+            }
+
+            Section("语音") {
+                Picker("朗读引擎", selection: $speechEngineRaw) {
+                    ForEach(SpeechEngine.allCases, id: \.rawValue) {
+                        Text($0.displayName).tag($0.rawValue)
+                    }
+                }
+                Text("Google 引擎发音更自然，但需要网络；长文本会截断到约 200 字符。系统引擎离线可用。")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section("启动") {

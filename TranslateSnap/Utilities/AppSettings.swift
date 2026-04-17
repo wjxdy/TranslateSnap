@@ -86,6 +86,13 @@ class AppSettings: ObservableObject {
 
     @AppStorage("apiKey") var apiKey: String = ""
 
+    @AppStorage("speechEngine") var speechEngineRaw: String = SpeechEngine.google.rawValue
+
+    var speechEngine: SpeechEngine {
+        get { SpeechEngine(rawValue: speechEngineRaw) ?? .google }
+        set { speechEngineRaw = newValue.rawValue }
+    }
+
     var popupPositionMode: PopupPositionMode {
         get { PopupPositionMode(rawValue: popupPositionModeRaw) ?? .fixed }
         set { popupPositionModeRaw = newValue.rawValue }
