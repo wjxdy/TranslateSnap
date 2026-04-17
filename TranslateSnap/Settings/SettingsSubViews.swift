@@ -7,7 +7,7 @@ struct GeneralSettingsView: View {
     @AppStorage("defaultPinned") private var defaultPinned = false
     @AppStorage("showOriginal") private var showOriginal = true
     @AppStorage("launchAtLogin") private var launchAtLogin = false
-    @AppStorage("speechEngine") private var speechEngineRaw = SpeechEngine.google.rawValue
+    @AppStorage("speechEngine") private var speechEngineRaw = SpeechEngine.edge.rawValue
     @ObservedObject private var settings = AppSettings.shared
 
     private let languages = ["简体中文", "繁體中文", "English", "日本語", "한국어", "Français", "Deutsch", "Español"]
@@ -45,7 +45,7 @@ struct GeneralSettingsView: View {
                         Text($0.displayName).tag($0.rawValue)
                     }
                 }
-                Text("Google 引擎发音更自然，但需要网络；长文本会截断到约 200 字符。系统引擎离线可用。")
+                Text("Edge 使用微软神经网络声音，质量最佳；Google 使用 Translate 端点，限 200 字；系统引擎离线可用。Edge/Google 都需要网络。")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

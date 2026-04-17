@@ -39,16 +39,36 @@ struct OriginalCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("原文")
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .textCase(.uppercase)
+            HStack(spacing: 6) {
+                Text("原文")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
+                Spacer()
+                if !text.isEmpty {
+                    Button(action: copy) {
+                        Image(systemName: "doc.on.doc").font(.system(size: 10))
+                    }.buttonStyle(.plain).help("复制")
+                    Button(action: speak) {
+                        Image(systemName: "speaker.wave.2").font(.system(size: 10))
+                    }.buttonStyle(.plain).help("朗读（自动检测语言）")
+                }
+            }
             Text(text)
                 .font(.system(size: 13))
                 .foregroundStyle(.primary)
                 .textSelection(.enabled)
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+
+    private func copy() {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+    }
+
+    private func speak() {
+        SpeechService.shared.speakAutoDetect(text)
     }
 }
 

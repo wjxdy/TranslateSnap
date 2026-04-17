@@ -86,10 +86,10 @@ class AppSettings: ObservableObject {
 
     @AppStorage("apiKey") var apiKey: String = ""
 
-    @AppStorage("speechEngine") var speechEngineRaw: String = SpeechEngine.google.rawValue
+    @AppStorage("speechEngine") var speechEngineRaw: String = SpeechEngine.edge.rawValue
 
     var speechEngine: SpeechEngine {
-        get { SpeechEngine(rawValue: speechEngineRaw) ?? .google }
+        get { SpeechEngine(rawValue: speechEngineRaw) ?? .edge }
         set { speechEngineRaw = newValue.rawValue }
     }
 
