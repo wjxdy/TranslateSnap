@@ -157,7 +157,7 @@ class AppSettings: ObservableObject {
                    let s = String(data: data, encoding: .utf8) {
                     promptTabsJSON = s
                 }
-                return PromptTab.builtinDefaults
+                return defaults
             }
             return tabs
         }

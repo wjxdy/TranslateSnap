@@ -95,7 +95,7 @@ struct PromptTab: Codable, Identifiable, Equatable {
 }
 ```
 
-**持久化**：`@AppStorage("promptTabs")` 存 JSON String。加载时解码失败（或空）→ 写入默认两项：
+**持久化**：`@AppStorage("promptTabsJSON")` 存 JSON String。加载时解码失败（或空）→ 写入默认两项：
 
 ```
 id=UUID, name="翻译", isBuiltin=true, visible=true,
@@ -123,7 +123,7 @@ enum PopupPositionMode: String, Codable, CaseIterable {
 @AppStorage("fixedPositionX") var fixedPositionX: Double = .nan   // nan = 未拖动过
 @AppStorage("fixedPositionY") var fixedPositionY: Double = .nan
 @AppStorage("defaultPinned") var defaultPinned: Bool = false
-@AppStorage("promptTabs") var promptTabsJSON: String = ""         // 空 = 首次启动 seed 默认
+@AppStorage("promptTabsJSON") var promptTabsJSON: String = ""     // 空 = 首次启动 seed 默认
 
 // computed
 var popupPositionMode: PopupPositionMode { ... }
