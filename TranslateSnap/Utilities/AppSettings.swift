@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import AppKit
 import Carbon.HIToolbox
 
 enum PopupMode: String, CaseIterable {
@@ -12,6 +13,18 @@ enum PopupMode: String, CaseIterable {
         case .compact: return "精简"
         case .full: return "完整"
         case .expandable: return "可展开"
+        }
+    }
+}
+
+enum PopupPositionMode: String, CaseIterable {
+    case fixed = "fixed"
+    case followCursor = "followCursor"
+
+    var displayName: String {
+        switch self {
+        case .fixed: return "固定位置"
+        case .followCursor: return "跟随指针"
         }
     }
 }
@@ -82,6 +95,11 @@ class AppSettings: ObservableObject {
     @AppStorage("customModel") var customModel: String = ""
     @AppStorage("launchAtLogin") var launchAtLogin: Bool = false
     @AppStorage("hasLaunchedBefore") var hasLaunchedBefore: Bool = false
+    @AppStorage("popupPositionMode") var popupPositionModeRaw: String = PopupPositionMode.fixed.rawValue
+    @AppStorage("fixedPositionX") var fixedPositionX: Double = .nan
+    @AppStorage("fixedPositionY") var fixedPositionY: Double = .nan
+    @AppStorage("defaultPinned") var defaultPinned: Bool = false
+    @AppStorage("promptTabsJSON") var promptTabsJSON: String = ""
 
     var popupMode: PopupMode {
         get { PopupMode(rawValue: popupModeRaw) ?? .expandable }
@@ -107,6 +125,49 @@ class AppSettings: ObservableObject {
     }
 
     @AppStorage("apiKey") var apiKey: String = ""
+
+    var popupPositionMode: PopupPositionMode {
+        get { PopupPositionMode(rawValue: popupPositionModeRaw) ?? .fixed }
+        set { popupPositionModeRaw = newValue.rawValue }
+    }
+
+    var savedFixedPosition: NSPoint? {
+        if fixedPositionX.isNaN || fixedPositionY.isNaN { return nil }
+        return NSPoint(x: fixedPositionX, y: fixedPositionY)
+    }
+
+    func setSavedFixedPosition(_ point: NSPoint?) {
+        if let p = point {
+            fixedPositionX = Double(p.x)
+            fixedPositionY = Double(p.y)
+        } else {
+            fixedPositionX = .nan
+            fixedPositionY = .nan
+        }
+    }
+
+    var promptTabs: [PromptTab] {
+        get {
+            guard !promptTabsJSON.isEmpty,
+                  let data = promptTabsJSON.data(using: .utf8),
+                  let tabs = try? JSONDecoder().decode([PromptTab].self, from: data)
+            else {
+                let defaults = PromptTab.builtinDefaults
+                if let data = try? JSONEncoder().encode(defaults),
+                   let s = String(data: data, encoding: .utf8) {
+                    promptTabsJSON = s
+                }
+                return PromptTab.builtinDefaults
+            }
+            return tabs
+        }
+        set {
+            if let data = try? JSONEncoder().encode(newValue),
+               let s = String(data: data, encoding: .utf8) {
+                promptTabsJSON = s
+            }
+        }
+    }
 
     var screenshotHotkeyDisplay: String {
         HotkeyUtils.displayString(keyCode: screenshotKeyCode, modifiers: screenshotModifiers)
