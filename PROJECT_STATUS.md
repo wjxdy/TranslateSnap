@@ -3,7 +3,7 @@
 ## 基本信息
 - 项目名称：TranslateSnap
 - 当前阶段：开发完成，待真机测试
-- 最后更新：2026-04-16
+- 最后更新：2026-04-17
 
 ## 需求进度
 | 需求 | 状态 | 备注 |
@@ -23,6 +23,7 @@
 | Task 13 — SelectionTranslateManager | ✅ 完成 | CGEventTap 全局快捷键 ⌘⇧Y，AX 读取选中文字 |
 | Task 14 — Settings UI | ✅ 完成 | 四个分区：通用/翻译/快捷键/API，含测试连接 |
 | Task 15 — 整体串联 + 首次启动引导 | ✅ 完成 | 首次启动自动打开设置窗口 |
+| Fix — AppIcon 像素尺寸 & 弹窗圆角 | ✅ 完成 | 重新生成正确像素尺寸的 AppIcon；圆角改到 NSPanel layer 层，阴影改用系统阴影 |
 
 ## 技术架构
 - **技术栈：** Swift 5.9+, SwiftUI, Vision, Accessibility API, URLSession, Keychain, AppKit
@@ -39,10 +40,14 @@
 - 2026-04-15: ClaudeProvider 使用 claude-haiku-4-5-20251001 模型（速度快、成本低）
 - 2026-04-15: 沙盒关闭（app-sandbox: false），以支持 CGEventTap 和 Accessibility API
 - 2026-04-15: 三个模式视图合并到 PopupModeViews.swift，四个设置视图合并到 SettingsSubViews.swift
+- 2026-04-16: AppIcon 因 Retina scale 导致像素翻倍被 actool 拒绝，重新生成为正确像素尺寸
+- 2026-04-16: 弹窗圆角改为在 NSPanel 的 contentView.layer 上设置 cornerRadius；SwiftUI shadow 改用 NSPanel 系统阴影，视觉更稳定
+- 2026-04-17: 启动新一轮 P0 功能：弹窗位置模式（固定/跟随指针）、钉住置顶、可拖动并记忆位置、自定义提示词标签。Spec 已写入 `docs/superpowers/specs/2026-04-17-popup-position-and-custom-prompts-design.md`
 
 ## 下次继续
 - [ ] 真机运行测试：截图翻译流程端到端验证
 - [ ] 真机运行测试：划词翻译流程端到端验证
 - [ ] 填写 API Key 后测试"测试连接"功能
+- [ ] 【进行中 P0】弹窗位置模式 + 钉住 + 自定义提示词标签（brainstorm 完成，待评审 spec → writing-plans）
 - [ ] 可选：实现快捷键自定义录制（KeyRecorderView）
-- [ ] 可选：App 图标设计
+- [x] ~~可选：App 图标设计~~（已生成并修复像素尺寸）
