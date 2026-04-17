@@ -17,7 +17,7 @@ class OpenAIProvider: TranslationProvider {
         req.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        let systemPrompt = TranslationEngine.buildSystemPrompt(targetLanguage: request.targetLanguage, style: request.style)
+        let systemPrompt = request.systemPrompt
         var body: [String: Any] = [
             "model": settings.effectiveModel,
             "messages": [

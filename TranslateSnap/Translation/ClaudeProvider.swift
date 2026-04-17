@@ -18,7 +18,7 @@ class ClaudeProvider: TranslationProvider {
         req.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        let systemPrompt = TranslationEngine.buildSystemPrompt(targetLanguage: request.targetLanguage, style: request.style)
+        let systemPrompt = request.systemPrompt
         var body: [String: Any] = [
             "model": settings.effectiveModel,
             "max_tokens": 1024,

@@ -103,7 +103,12 @@ struct APISettingsView: View {
                     Task {
                         do {
                             let settings = AppSettings.shared
-                            let req = TranslationRequest(text: "hello", targetLanguage: settings.targetLanguage, style: .natural)
+                            let req = TranslationRequest(
+                                text: "hello",
+                                targetLanguage: settings.targetLanguage,
+                                style: .natural,
+                                systemPrompt: "Reply with a single short greeting in \(settings.targetLanguage)."
+                            )
                             let provider = TranslationEngine.provider(for: settings)
                             _ = try await provider.translate(req)
                             testStatus = "✅ 连接成功"

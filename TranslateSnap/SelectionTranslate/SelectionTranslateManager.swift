@@ -16,7 +16,12 @@ class SelectionTranslateManager {
             return
         }
         let settings = AppSettings.shared
-        let request = TranslationRequest(text: text, targetLanguage: settings.targetLanguage, style: settings.translationStyle)
+        let request = TranslationRequest(
+            text: text,
+            targetLanguage: settings.targetLanguage,
+            style: settings.translationStyle,
+            systemPrompt: TranslationEngine.buildSystemPrompt(targetLanguage: settings.targetLanguage, style: settings.translationStyle)
+        )
         let provider = TranslationEngine.provider(for: settings)
         let viewModel = StreamingTranslationViewModel(original: text)
         let popup = PopupWindowController.shared

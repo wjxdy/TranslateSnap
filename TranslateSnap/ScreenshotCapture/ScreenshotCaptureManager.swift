@@ -50,7 +50,8 @@ class ScreenshotCaptureManager {
             let request = TranslationRequest(
                 text: text,
                 targetLanguage: settings.targetLanguage,
-                style: settings.translationStyle
+                style: settings.translationStyle,
+                systemPrompt: TranslationEngine.buildSystemPrompt(targetLanguage: settings.targetLanguage, style: settings.translationStyle)
             )
             let provider = TranslationEngine.provider(for: settings)
             let viewModel = StreamingTranslationViewModel(original: text)

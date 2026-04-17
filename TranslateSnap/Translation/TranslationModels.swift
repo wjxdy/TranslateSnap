@@ -4,6 +4,7 @@ struct TranslationRequest {
     let text: String
     let targetLanguage: String
     let style: TranslationStyle
+    let systemPrompt: String
 }
 
 struct TranslationResult {
@@ -41,6 +42,16 @@ class TranslationEngine {
         case .openai, .kimi, .custom:
             return OpenAIProvider(settings: settings)
         }
+    }
+
+    static func renderPrompt(
+        _ template: String,
+        targetLanguage: String,
+        style: TranslationStyle
+    ) -> String {
+        template
+            .replacingOccurrences(of: "{targetLanguage}", with: targetLanguage)
+            .replacingOccurrences(of: "{style}", with: style.displayName)
     }
 
     static func buildSystemPrompt(targetLanguage: String, style: TranslationStyle) -> String {
