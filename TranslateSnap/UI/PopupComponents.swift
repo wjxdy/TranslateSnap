@@ -104,6 +104,9 @@ struct TabCard: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+        .onDisappear {
+            synthesizer.stopSpeaking(at: .immediate)
+        }
     }
 
     private func copy() {
