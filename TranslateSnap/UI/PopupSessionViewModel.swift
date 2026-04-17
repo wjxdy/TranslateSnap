@@ -31,6 +31,7 @@ final class PopupSessionViewModel: ObservableObject {
     }
 
     func start() {
+        guard tasks.isEmpty else { return }
         let settings = AppSettings.shared
         let provider = TranslationEngine.provider(for: settings)
         for tab in tabs {

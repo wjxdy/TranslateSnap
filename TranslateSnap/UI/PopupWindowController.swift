@@ -76,7 +76,7 @@ final class PopupWindowController {
             moveObserver = nil
         }
         removeGlobalMouseDownMonitor()
-        panel?.close()
+        panel?.orderOut(nil)
         panel = nil
         session = nil
         HotkeyManager.shared.activePopupController = nil
@@ -93,7 +93,9 @@ final class PopupWindowController {
     private func computeOrigin(windowSize: NSSize) -> NSPoint {
         let settings = AppSettings.shared
         let mode = settings.popupPositionMode
-        let screen = currentScreen(for: mode)
+        guard let screen = currentScreen(for: mode) else {
+            return .zero
+        }
         let visible = screen.visibleFrame
 
         switch mode {
@@ -108,7 +110,8 @@ final class PopupWindowController {
             return constrain(p, size: windowSize, to: visible)
 
         case .fixed:
-            if let saved = settings.savedFixedPosition {
+            if let saved = settings.savedFixedPosition,
+               NSScreen.screens.contains(where: { $0.frame.contains(saved) }) {
                 return constrain(saved, size: windowSize, to: visible)
             }
             return NSPoint(
@@ -118,17 +121,17 @@ final class PopupWindowController {
         }
     }
 
-    private func currentScreen(for mode: PopupPositionMode) -> NSScreen {
+    private func currentScreen(for mode: PopupPositionMode) -> NSScreen? {
         switch mode {
         case .followCursor:
             let mouse = NSEvent.mouseLocation
-            return NSScreen.screens.first(where: { $0.frame.contains(mouse) }) ?? NSScreen.main ?? NSScreen.screens[0]
+            return NSScreen.screens.first(where: { $0.frame.contains(mouse) }) ?? NSScreen.main ?? NSScreen.screens.first
         case .fixed:
             if let saved = AppSettings.shared.savedFixedPosition,
                let screen = NSScreen.screens.first(where: { $0.frame.contains(saved) }) {
                 return screen
             }
-            return NSScreen.main ?? NSScreen.screens[0]
+            return NSScreen.main ?? NSScreen.screens.first
         }
     }
 
