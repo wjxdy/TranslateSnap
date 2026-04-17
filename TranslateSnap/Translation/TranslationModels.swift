@@ -2,7 +2,6 @@ import Foundation
 
 struct TranslationRequest {
     let text: String
-    let targetLanguage: String
     let systemPrompt: String
 }
 
@@ -40,13 +39,6 @@ class TranslationEngine {
         case .openai, .kimi, .custom:
             return OpenAIProvider(settings: settings)
         }
-    }
-
-    static func renderPrompt(
-        _ template: String,
-        targetLanguage: String
-    ) -> String {
-        template.replacingOccurrences(of: "{targetLanguage}", with: targetLanguage)
     }
 
 }

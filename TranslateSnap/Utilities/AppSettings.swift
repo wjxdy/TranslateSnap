@@ -52,7 +52,6 @@ enum AIProvider: String, CaseIterable {
 class AppSettings: ObservableObject {
     static let shared = AppSettings()
 
-    @AppStorage("targetLanguage") var targetLanguage: String = "简体中文"
     @AppStorage("showOriginal") var showOriginal: Bool = true
     // 截图翻译快捷键: 默认 ⌘⇧1 (keyCode 18)
     @AppStorage("screenshotKeyCode") var screenshotKeyCode: Int = 18
@@ -70,6 +69,7 @@ class AppSettings: ObservableObject {
     @AppStorage("fixedPositionY") var fixedPositionY: Double = .nan
     @AppStorage("defaultPinned") var defaultPinned: Bool = false
     @AppStorage("promptTabsJSON") var promptTabsJSON: String = ""
+    @AppStorage("deletedBuiltinIDs") var deletedBuiltinIDsJSON: String = "[]"
 
     var aiProvider: AIProvider {
         get { AIProvider(rawValue: aiProviderRaw) ?? .openai }
@@ -132,10 +132,13 @@ class AppSettings: ObservableObject {
                 }
                 return defaults
             }
-            // 迁移：补齐缺失的内置标签（按固定 UUID 去重）。已存在的（含用户已隐藏的）不动。
+            // 迁移：补齐缺失的内置标签（按固定 UUID 去重）；用户主动删除过的内置跳过。
             let existingIDs = Set(tabs.map { $0.id })
+            let deleted = deletedBuiltinIDs
             var appended = false
-            for builtin in PromptTab.builtinDefaults where !existingIDs.contains(builtin.id) {
+            for builtin in PromptTab.builtinDefaults
+                where !existingIDs.contains(builtin.id) && !deleted.contains(builtin.id)
+            {
                 tabs.append(builtin)
                 appended = true
             }
@@ -151,6 +154,23 @@ class AppSettings: ObservableObject {
                let s = String(data: data, encoding: .utf8) {
                 promptTabsJSON = s
             }
+        }
+    }
+
+    var deletedBuiltinIDs: Set<UUID> {
+        guard let data = deletedBuiltinIDsJSON.data(using: .utf8),
+              let arr = try? JSONDecoder().decode([String].self, from: data)
+        else { return [] }
+        return Set(arr.compactMap { UUID(uuidString: $0) })
+    }
+
+    func markBuiltinDeleted(_ id: UUID) {
+        var current = deletedBuiltinIDs
+        current.insert(id)
+        let arr = current.map { $0.uuidString }
+        if let data = try? JSONEncoder().encode(arr),
+           let s = String(data: data, encoding: .utf8) {
+            deletedBuiltinIDsJSON = s
         }
     }
 

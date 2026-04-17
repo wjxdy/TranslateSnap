@@ -2,7 +2,6 @@ import SwiftUI
 import ServiceManagement
 
 struct GeneralSettingsView: View {
-    @AppStorage("targetLanguage") private var targetLanguage = "简体中文"
     @AppStorage("popupPositionMode") private var positionModeRaw = PopupPositionMode.fixed.rawValue
     @AppStorage("defaultPinned") private var defaultPinned = false
     @AppStorage("showOriginal") private var showOriginal = true
@@ -11,16 +10,8 @@ struct GeneralSettingsView: View {
     @AppStorage("speechGender") private var speechGenderRaw = SpeechGender.female.rawValue
     @ObservedObject private var settings = AppSettings.shared
 
-    private let languages = ["简体中文", "繁體中文", "English", "日本語", "한국어", "Français", "Deutsch", "Español"]
-
     var body: some View {
         Form {
-            Section("语言") {
-                Picker("目标语言", selection: $targetLanguage) {
-                    ForEach(languages, id: \.self) { Text($0).tag($0) }
-                }
-            }
-
             Section("弹窗") {
                 Picker("位置模式", selection: $positionModeRaw) {
                     ForEach(PopupPositionMode.allCases, id: \.rawValue) {
@@ -125,8 +116,7 @@ struct APISettingsView: View {
                             let settings = AppSettings.shared
                             let req = TranslationRequest(
                                 text: "hello",
-                                targetLanguage: settings.targetLanguage,
-                                systemPrompt: "Reply with a single short greeting in \(settings.targetLanguage)."
+                                systemPrompt: "Reply with a short greeting."
                             )
                             let provider = TranslationEngine.provider(for: settings)
                             _ = try await provider.translate(req)

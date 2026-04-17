@@ -28,14 +28,12 @@ struct PromptsSettingsView: View {
                             isNew = false
                         }
                         .buttonStyle(.bordered).controlSize(.small)
-                        if !tab.isBuiltin {
-                            Button(role: .destructive) {
-                                deleteTab(tab.id)
-                            } label: {
-                                Image(systemName: "trash")
-                            }
-                            .buttonStyle(.bordered).controlSize(.small)
+                        Button(role: .destructive) {
+                            deleteTab(tab.id, isBuiltin: tab.isBuiltin)
+                        } label: {
+                            Image(systemName: "trash")
                         }
+                        .buttonStyle(.bordered).controlSize(.small)
                     }
                 }
                 .onMove { src, dst in
@@ -56,9 +54,6 @@ struct PromptsSettingsView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 Spacer()
-                Text("占位符：{targetLanguage}")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
             .padding(12)
         }
@@ -80,8 +75,12 @@ struct PromptsSettingsView: View {
         }
     }
 
-    private func deleteTab(_ id: UUID) {
+    private func deleteTab(_ id: UUID, isBuiltin: Bool) {
         tabs.removeAll { $0.id == id }
+        if isBuiltin {
+            // 记录用户主动删除的内置 ID，避免下次启动被迁移逻辑补回来
+            AppSettings.shared.markBuiltinDeleted(id)
+        }
         persist()
     }
 
@@ -118,9 +117,12 @@ struct PromptEditorSheet: View {
                         .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(Color.secondary.opacity(0.3)))
                 }
                 Toggle("在弹窗中显示", isOn: $draft.visible)
-                Text("占位符 {targetLanguage} 会在调用时替换为当前目标语言。")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("工作方式：这段提示词会作为 system message，划词选中或截图识别到的文字会作为 user message，一起发送给 AI。")
+                    Text("示例：上面写\"把用户的文字翻译成粤语\"，选中的文字被翻译成粤语。想指定输出语言、风格、格式直接写在提示词里。")
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
             .formStyle(.grouped)
 

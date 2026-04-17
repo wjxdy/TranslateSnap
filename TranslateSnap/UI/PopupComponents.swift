@@ -134,7 +134,7 @@ struct TabCard: View {
     }
 
     private func speak() {
-        SpeechService.shared.speak(state.text, language: AppSettings.shared.targetLanguage)
+        SpeechService.shared.speakAutoDetect(state.text)
     }
 }
 

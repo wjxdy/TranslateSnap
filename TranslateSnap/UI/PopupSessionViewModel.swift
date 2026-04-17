@@ -59,14 +59,9 @@ final class PopupSessionViewModel: ObservableObject {
     }
 
     private func spawn(tab: PromptTab, provider: TranslationProvider, settings: AppSettings) {
-        let prompt = TranslationEngine.renderPrompt(
-            tab.systemPrompt,
-            targetLanguage: settings.targetLanguage
-        )
         let request = TranslationRequest(
             text: originalText,
-            targetLanguage: settings.targetLanguage,
-            systemPrompt: prompt
+            systemPrompt: tab.systemPrompt
         )
         let stream = provider.translateStream(request)
         let id = tab.id
