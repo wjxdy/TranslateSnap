@@ -50,6 +50,8 @@ struct PopupRootView: View {
         .background(Color(.windowBackgroundColor))
         .overlay(alignment: .bottomTrailing) {
             ResizeHandle()
+                .frame(width: 18, height: 18)
+                .padding(2)
         }
         .onAppear {
             viewModel.start()
@@ -73,6 +75,7 @@ final class ResizeHandleNSView: NSView {
     private var startTop: CGFloat?
 
     override var mouseDownCanMoveWindow: Bool { false }
+    override var intrinsicContentSize: NSSize { NSSize(width: 18, height: 18) }
 
     override func resetCursorRects() {
         super.resetCursorRects()
