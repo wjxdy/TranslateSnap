@@ -5,6 +5,7 @@ struct GeneralSettingsView: View {
     @AppStorage("targetLanguage") private var targetLanguage = "简体中文"
     @AppStorage("popupPositionMode") private var positionModeRaw = PopupPositionMode.fixed.rawValue
     @AppStorage("defaultPinned") private var defaultPinned = false
+    @AppStorage("showOriginal") private var showOriginal = true
     @AppStorage("launchAtLogin") private var launchAtLogin = false
     @ObservedObject private var settings = AppSettings.shared
 
@@ -34,6 +35,7 @@ struct GeneralSettingsView: View {
                 Text("钉住后点击外部与 ESC 都不会关闭；大头针按钮可在弹窗里切换。")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                Toggle("显示原文", isOn: $showOriginal)
             }
 
             Section("启动") {
@@ -45,24 +47,6 @@ struct GeneralSettingsView: View {
                         }
                     }
             }
-        }
-        .formStyle(.grouped)
-        .padding()
-    }
-}
-
-struct TranslationSettingsView: View {
-    @AppStorage("translationStyle") private var styleRaw = TranslationStyle.professional.rawValue
-    @AppStorage("showOriginal") private var showOriginal = true
-
-    var body: some View {
-        Form {
-            Picker("翻译风格", selection: $styleRaw) {
-                ForEach(TranslationStyle.allCases, id: \.rawValue) {
-                    Text($0.displayName).tag($0.rawValue)
-                }
-            }
-            Toggle("显示原文", isOn: $showOriginal)
         }
         .formStyle(.grouped)
         .padding()
@@ -124,7 +108,6 @@ struct APISettingsView: View {
                             let req = TranslationRequest(
                                 text: "hello",
                                 targetLanguage: settings.targetLanguage,
-                                style: .natural,
                                 systemPrompt: "Reply with a single short greeting in \(settings.targetLanguage)."
                             )
                             let provider = TranslationEngine.provider(for: settings)

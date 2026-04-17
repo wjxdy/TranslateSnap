@@ -3,7 +3,6 @@ import Foundation
 struct TranslationRequest {
     let text: String
     let targetLanguage: String
-    let style: TranslationStyle
     let systemPrompt: String
 }
 
@@ -45,12 +44,9 @@ class TranslationEngine {
 
     static func renderPrompt(
         _ template: String,
-        targetLanguage: String,
-        style: TranslationStyle
+        targetLanguage: String
     ) -> String {
-        template
-            .replacingOccurrences(of: "{targetLanguage}", with: targetLanguage)
-            .replacingOccurrences(of: "{style}", with: style.displayName)
+        template.replacingOccurrences(of: "{targetLanguage}", with: targetLanguage)
     }
 
 }

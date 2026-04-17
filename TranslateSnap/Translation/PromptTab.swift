@@ -19,7 +19,7 @@ struct PromptTab: Codable, Identifiable, Equatable {
         [
             PromptTab(
                 name: "翻译",
-                systemPrompt: "将下列文字翻译为 {targetLanguage}，风格：{style}。只输出翻译结果，不要额外说明。",
+                systemPrompt: "将下列文字翻译为 {targetLanguage}，使用自然流畅的表达。只输出翻译结果，不要额外说明。",
                 visible: true,
                 isBuiltin: true
             ),

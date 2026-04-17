@@ -15,20 +15,6 @@ enum PopupPositionMode: String, CaseIterable {
     }
 }
 
-enum TranslationStyle: String, CaseIterable {
-    case literal = "literal"
-    case natural = "natural"
-    case professional = "professional"
-
-    var displayName: String {
-        switch self {
-        case .literal: return "直译"
-        case .natural: return "意译"
-        case .professional: return "专业解释"
-        }
-    }
-}
-
 enum AIProvider: String, CaseIterable {
     case claude = "claude"
     case openai = "openai"
@@ -67,7 +53,6 @@ class AppSettings: ObservableObject {
     static let shared = AppSettings()
 
     @AppStorage("targetLanguage") var targetLanguage: String = "简体中文"
-    @AppStorage("translationStyle") var translationStyleRaw: String = TranslationStyle.professional.rawValue
     @AppStorage("showOriginal") var showOriginal: Bool = true
     // 截图翻译快捷键: 默认 ⌘⇧1 (keyCode 18)
     @AppStorage("screenshotKeyCode") var screenshotKeyCode: Int = 18
@@ -85,11 +70,6 @@ class AppSettings: ObservableObject {
     @AppStorage("fixedPositionY") var fixedPositionY: Double = .nan
     @AppStorage("defaultPinned") var defaultPinned: Bool = false
     @AppStorage("promptTabsJSON") var promptTabsJSON: String = ""
-
-    var translationStyle: TranslationStyle {
-        get { TranslationStyle(rawValue: translationStyleRaw) ?? .professional }
-        set { translationStyleRaw = newValue.rawValue }
-    }
 
     var aiProvider: AIProvider {
         get { AIProvider(rawValue: aiProviderRaw) ?? .openai }

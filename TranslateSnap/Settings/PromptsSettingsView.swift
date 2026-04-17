@@ -56,7 +56,7 @@ struct PromptsSettingsView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 Spacer()
-                Text("占位符：{targetLanguage} / {style}")
+                Text("占位符：{targetLanguage}")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -118,7 +118,7 @@ struct PromptEditorSheet: View {
                         .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(Color.secondary.opacity(0.3)))
                 }
                 Toggle("在弹窗中显示", isOn: $draft.visible)
-                Text("占位符 {targetLanguage} 和 {style} 会在调用时替换为当前设置。")
+                Text("占位符 {targetLanguage} 会在调用时替换为当前目标语言。")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
