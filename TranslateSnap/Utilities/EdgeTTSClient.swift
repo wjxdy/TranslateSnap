@@ -1,9 +1,12 @@
 import Foundation
+import CryptoKit
 
 /// Microsoft Edge 浏览器的 "大声朗读" 用的免费 TTS WebSocket 端点封装。
 /// 协议细节来自 edge-tts（Python）开源项目，无需 API Key。
+/// 2024+ 微软加了 Sec-MS-GEC 时间戳校验，必须算对否则 403。
 final class EdgeTTSClient: NSObject {
-    private let endpoint = URL(string: "wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=6A5AA1D4EAFF4E9FB37E23D68491D6F4")!
+    private static let trustedClientToken = "6A5AA1D4EAFF4E9FB37E23D68491D6F4"
+    private static let secMsGecVersion = "1-130.0.2849.68"
 
     private var session: URLSession?
     private var task: URLSessionWebSocketTask?
@@ -19,9 +22,16 @@ final class EdgeTTSClient: NSObject {
         let session = URLSession(configuration: .default)
         self.session = session
 
-        var req = URLRequest(url: endpoint)
+        guard let url = Self.buildEndpointURL() else {
+            NSLog("[TranslateSnap] EdgeTTS: failed to build endpoint URL")
+            completion(nil)
+            return
+        }
+        var req = URLRequest(url: url)
         req.setValue("chrome-extension://jdiccldimpdaibmpdkjnbmckianbfold", forHTTPHeaderField: "Origin")
-        req.setValue("Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36 Edg/91.0.864.41", forHTTPHeaderField: "User-Agent")
+        req.setValue("Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0", forHTTPHeaderField: "User-Agent")
+        req.setValue("no-cache", forHTTPHeaderField: "Pragma")
+        req.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
 
         let task = session.webSocketTask(with: req)
         self.task = task
@@ -119,5 +129,33 @@ final class EdgeTTSClient: NSObject {
         f.timeZone = TimeZone(identifier: "UTC")
         f.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
         return f.string(from: Date())
+    }
+
+    /// Sec-MS-GEC：把当前时间按 Windows file time（100ns 自 1601-01-01）换算，再向下 round 到最近 5 分钟，
+    /// 和 TrustedClientToken 拼起来取 SHA-256 大写 hex。
+    private static func generateSecMsGec() -> String {
+        let winEpochSecondsBefore1970: Double = 11_644_473_600
+        let now = Date().timeIntervalSince1970
+        let ticks100ns = (now + winEpochSecondsBefore1970) * 1e7
+        let fiveMinIn100ns: Double = 300 * 1e7
+        let rounded = floor(ticks100ns / fiveMinIn100ns) * fiveMinIn100ns
+        let intRounded = Int64(rounded)
+        let input = "\(intRounded)\(trustedClientToken)"
+        let data = Data(input.utf8)
+        let digest = SHA256.hash(data: data)
+        return digest.map { String(format: "%02X", $0) }.joined()
+    }
+
+    private static func buildEndpointURL() -> URL? {
+        let gec = generateSecMsGec()
+        let connectionId = UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased()
+        var components = URLComponents(string: "wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1")
+        components?.queryItems = [
+            URLQueryItem(name: "TrustedClientToken", value: trustedClientToken),
+            URLQueryItem(name: "Sec-MS-GEC", value: gec),
+            URLQueryItem(name: "Sec-MS-GEC-Version", value: secMsGecVersion),
+            URLQueryItem(name: "ConnectionId", value: connectionId)
+        ]
+        return components?.url
     }
 }

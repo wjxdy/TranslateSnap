@@ -8,6 +8,7 @@ struct GeneralSettingsView: View {
     @AppStorage("showOriginal") private var showOriginal = true
     @AppStorage("launchAtLogin") private var launchAtLogin = false
     @AppStorage("speechEngine") private var speechEngineRaw = SpeechEngine.edge.rawValue
+    @AppStorage("speechGender") private var speechGenderRaw = SpeechGender.female.rawValue
     @ObservedObject private var settings = AppSettings.shared
 
     private let languages = ["简体中文", "繁體中文", "English", "日本語", "한국어", "Français", "Deutsch", "Español"]
@@ -45,7 +46,12 @@ struct GeneralSettingsView: View {
                         Text($0.displayName).tag($0.rawValue)
                     }
                 }
-                Text("Edge 使用微软神经网络声音，质量最佳；Google 使用 Translate 端点，限 200 字；系统引擎离线可用。Edge/Google 都需要网络。")
+                Picker("声音性别", selection: $speechGenderRaw) {
+                    ForEach(SpeechGender.allCases, id: \.rawValue) {
+                        Text($0.displayName).tag($0.rawValue)
+                    }
+                }
+                Text("Edge 使用微软神经网络声音，支持性别切换；Google 无性别选项，始终用默认；系统引擎性别由 macOS 决定。Edge/Google 需要网络。")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

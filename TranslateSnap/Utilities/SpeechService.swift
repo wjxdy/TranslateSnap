@@ -17,6 +17,18 @@ enum SpeechEngine: String, CaseIterable {
     }
 }
 
+enum SpeechGender: String, CaseIterable {
+    case female
+    case male
+
+    var displayName: String {
+        switch self {
+        case .female: return "女声"
+        case .male:   return "男声"
+        }
+    }
+}
+
 @MainActor
 final class SpeechService {
     static let shared = SpeechService()
@@ -124,7 +136,8 @@ final class SpeechService {
     // MARK: - Edge
 
     private func playEdgeTTS(text: String, languageTag: String) {
-        let (voice, tag) = Self.edgeVoice(for: languageTag)
+        let gender = AppSettings.shared.speechGender
+        let (voice, tag) = Self.edgeVoice(for: languageTag, gender: gender)
         let client = EdgeTTSClient()
         edgeClient = client
         client.synthesize(text: text, voice: voice, languageTag: tag) { [weak self] data in
@@ -177,17 +190,26 @@ final class SpeechService {
     }
 
     /// Edge 神经网络声音（voice 名 + xml:lang 标签）
-    static func edgeVoice(for bcp47: String) -> (voice: String, tag: String) {
+    static func edgeVoice(for bcp47: String, gender: SpeechGender) -> (voice: String, tag: String) {
         switch bcp47 {
-        case "zh-CN": return ("zh-CN-XiaoxiaoNeural", "zh-CN")
-        case "zh-TW": return ("zh-TW-HsiaoChenNeural", "zh-TW")
-        case "en-US", "en-GB", "en": return ("en-US-AriaNeural", "en-US")
-        case "ja-JP", "ja": return ("ja-JP-NanamiNeural", "ja-JP")
-        case "ko-KR", "ko": return ("ko-KR-SunHiNeural", "ko-KR")
-        case "fr-FR", "fr": return ("fr-FR-DeniseNeural", "fr-FR")
-        case "de-DE", "de": return ("de-DE-KatjaNeural", "de-DE")
-        case "es-ES", "es": return ("es-ES-ElviraNeural", "es-ES")
-        default: return ("en-US-AriaNeural", "en-US")
+        case "zh-CN":
+            return (gender == .male ? "zh-CN-YunxiNeural" : "zh-CN-XiaoxiaoNeural", "zh-CN")
+        case "zh-TW":
+            return (gender == .male ? "zh-TW-YunJheNeural" : "zh-TW-HsiaoChenNeural", "zh-TW")
+        case "en-US", "en-GB", "en":
+            return (gender == .male ? "en-US-GuyNeural" : "en-US-AriaNeural", "en-US")
+        case "ja-JP", "ja":
+            return (gender == .male ? "ja-JP-KeitaNeural" : "ja-JP-NanamiNeural", "ja-JP")
+        case "ko-KR", "ko":
+            return (gender == .male ? "ko-KR-InJoonNeural" : "ko-KR-SunHiNeural", "ko-KR")
+        case "fr-FR", "fr":
+            return (gender == .male ? "fr-FR-HenriNeural" : "fr-FR-DeniseNeural", "fr-FR")
+        case "de-DE", "de":
+            return (gender == .male ? "de-DE-ConradNeural" : "de-DE-KatjaNeural", "de-DE")
+        case "es-ES", "es":
+            return (gender == .male ? "es-ES-AlvaroNeural" : "es-ES-ElviraNeural", "es-ES")
+        default:
+            return (gender == .male ? "en-US-GuyNeural" : "en-US-AriaNeural", "en-US")
         }
     }
 

@@ -87,10 +87,16 @@ class AppSettings: ObservableObject {
     @AppStorage("apiKey") var apiKey: String = ""
 
     @AppStorage("speechEngine") var speechEngineRaw: String = SpeechEngine.edge.rawValue
+    @AppStorage("speechGender") var speechGenderRaw: String = SpeechGender.female.rawValue
 
     var speechEngine: SpeechEngine {
         get { SpeechEngine(rawValue: speechEngineRaw) ?? .edge }
         set { speechEngineRaw = newValue.rawValue }
+    }
+
+    var speechGender: SpeechGender {
+        get { SpeechGender(rawValue: speechGenderRaw) ?? .female }
+        set { speechGenderRaw = newValue.rawValue }
     }
 
     var popupPositionMode: PopupPositionMode {
