@@ -24,16 +24,17 @@
 | Task 14 — Settings UI | ✅ 完成 | 四个分区：通用/翻译/快捷键/API，含测试连接 |
 | Task 15 — 整体串联 + 首次启动引导 | ✅ 完成 | 首次启动自动打开设置窗口 |
 | Fix — AppIcon 像素尺寸 & 弹窗圆角 | ✅ 完成 | 重新生成正确像素尺寸的 AppIcon；圆角改到 NSPanel layer 层，阴影改用系统阴影 |
+| P0 — 弹窗位置/钉住/自定义提示词 | ✅ 代码完成 | 10 任务 15 commits，位置模式（固定/跟随指针）+ 拖动记忆、大头针钉住、每标签并行流式、提示词 CRUD。分支 `feat/popup-position-prompts`，待真机验证与合入 main |
 
 ## 技术架构
 - **技术栈：** Swift 5.9+, SwiftUI, Vision, Accessibility API, URLSession, Keychain, AppKit
 - **部署目标：** macOS 13.0+
 - **构建工具：** XcodeGen (project.yml) + Xcode
 - **沙盒：** 关闭（需 CGEventTap + Accessibility API）
-- **代码结构：** 17 个 Swift 文件，部分视图合并（PopupModeViews / SettingsSubViews）
+- **代码结构：** ~20 个 Swift 文件。新增 PromptTab / PopupSessionViewModel / PopupComponents / PromptsSettingsView；删除 StreamingTranslationViewModel；合并 PopupModeViews / SettingsSubViews
 
 ## 编译状态
-- ✅ `xcodebuild` BUILD SUCCEEDED（2026-04-15）
+- ✅ `xcodebuild` BUILD SUCCEEDED（2026-04-17，分支 `feat/popup-position-prompts` tip `05d5969`）
 
 ## 关键决策
 - 2026-04-15: 快捷键暂时硬编码为 ⌘⇧Y（划词）和 ⌘⇧1（截图），自定义录制功能标注为后续版本
@@ -43,11 +44,16 @@
 - 2026-04-16: AppIcon 因 Retina scale 导致像素翻倍被 actool 拒绝，重新生成为正确像素尺寸
 - 2026-04-16: 弹窗圆角改为在 NSPanel 的 contentView.layer 上设置 cornerRadius；SwiftUI shadow 改用 NSPanel 系统阴影，视觉更稳定
 - 2026-04-17: 启动新一轮 P0 功能：弹窗位置模式（固定/跟随指针）、钉住置顶、可拖动并记忆位置、自定义提示词标签。Spec 已写入 `docs/superpowers/specs/2026-04-17-popup-position-and-custom-prompts-design.md`
+- 2026-04-17: P0 代码实现全部完成。设计决策：每标签独立 API 调用（token 换取灵活性）；fixed 模式全局一个记忆位置、钉住期间拖动不写记忆；删除 PopupMode 枚举、StreamingTranslationViewModel、buildSystemPrompt、TranslationResult.explanation（全部 dead code 清理）；TranslationRequest 新增 systemPrompt 字段，AsyncThrowingStream 增加 onTermination 正确传递取消
 
 ## 下次继续
-- [ ] 真机运行测试：截图翻译流程端到端验证
+- [ ] 真机验证新 P0：8 个手动场景（见 plan 文件 Task 10），通过后合并 `feat/popup-position-prompts` 到 main
+- [ ] 真机运行测试：截图翻译流程端到端验证（含多标签并行流式）
 - [ ] 真机运行测试：划词翻译流程端到端验证
 - [ ] 填写 API Key 后测试"测试连接"功能
-- [ ] 【进行中 P0】弹窗位置模式 + 钉住 + 自定义提示词标签（brainstorm 完成，待评审 spec → writing-plans）
+- [ ] 可选跟进：多标签流式时的自动滚动优化（当前会把已读位置拉到底）
+- [ ] 可选跟进：提示词设置加"恢复默认"按钮
+- [ ] 可选跟进：`PromptTab.builtinDefaults` 改用固定 UUID 字面量
 - [ ] 可选：实现快捷键自定义录制（KeyRecorderView）
+- [x] ~~P0 代码实现：弹窗位置/钉住/自定义提示词~~（分支 `feat/popup-position-prompts`，待验证合并）
 - [x] ~~可选：App 图标设计~~（已生成并修复像素尺寸）
