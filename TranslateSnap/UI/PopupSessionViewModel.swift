@@ -17,7 +17,7 @@ final class PopupSessionViewModel: ObservableObject {
     let originalText: String
     let trigger: TriggerKind
     @Published private(set) var tabs: [PromptTab]
-    @Published var states: [UUID: TabState] = [:]
+    @Published private(set) var states: [UUID: TabState] = [:]
     @Published var pinned: Bool
 
     private var tasks: [UUID: Task<Void, Never>] = [:]
@@ -74,7 +74,7 @@ final class PopupSessionViewModel: ObservableObject {
         tasks[id] = Task { [weak self] in
             do {
                 for try await chunk in stream {
-                    if Task.isCancelled { return }
+                    try Task.checkCancellation()
                     await MainActor.run {
                         guard var s = self?.states[id] else { return }
                         if s.isLoading { s.isLoading = false }
@@ -88,6 +88,8 @@ final class PopupSessionViewModel: ObservableObject {
                     s.text = s.text.trimmingCharacters(in: .whitespacesAndNewlines)
                     self?.states[id] = s
                 }
+            } catch is CancellationError {
+                // intentional cancel — leave state as-is
             } catch {
                 await MainActor.run {
                     guard var s = self?.states[id] else { return }

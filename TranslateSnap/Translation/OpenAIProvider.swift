@@ -55,7 +55,7 @@ class OpenAIProvider: TranslationProvider {
 
     func translateStream(_ request: TranslationRequest) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { continuation in
-            Task {
+            let task = Task {
                 do {
                     guard !request.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
                         throw TranslationError.emptyText
@@ -82,6 +82,7 @@ class OpenAIProvider: TranslationProvider {
                     continuation.finish(throwing: error)
                 }
             }
+            continuation.onTermination = { _ in task.cancel() }
         }
     }
 }
