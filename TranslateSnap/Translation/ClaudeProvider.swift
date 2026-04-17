@@ -48,7 +48,7 @@ class ClaudeProvider: TranslationProvider {
             throw TranslationError.parseError
         }
         let translation = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        return TranslationResult(original: request.text, translation: translation, explanation: nil)
+        return TranslationResult(original: request.text, translation: translation)
     }
 
     func translateStream(_ request: TranslationRequest) -> AsyncThrowingStream<String, Error> {

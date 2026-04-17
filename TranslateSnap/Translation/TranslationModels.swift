@@ -10,7 +10,6 @@ struct TranslationRequest {
 struct TranslationResult {
     let original: String
     let translation: String
-    let explanation: String?
 }
 
 protocol TranslationProvider {
