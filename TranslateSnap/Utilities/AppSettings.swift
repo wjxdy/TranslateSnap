@@ -67,6 +67,8 @@ class AppSettings: ObservableObject {
     @AppStorage("popupPositionMode") var popupPositionModeRaw: String = PopupPositionMode.fixed.rawValue
     @AppStorage("fixedPositionX") var fixedPositionX: Double = .nan
     @AppStorage("fixedPositionY") var fixedPositionY: Double = .nan
+    @AppStorage("popupWidth") var popupWidth: Double = .nan
+    @AppStorage("popupHeight") var popupHeight: Double = .nan
     @AppStorage("defaultPinned") var defaultPinned: Bool = false
     @AppStorage("promptTabsJSON") var promptTabsJSON: String = ""
     @AppStorage("deletedBuiltinIDs") var deletedBuiltinIDsJSON: String = "[]"
@@ -116,6 +118,21 @@ class AppSettings: ObservableObject {
         } else {
             fixedPositionX = .nan
             fixedPositionY = .nan
+        }
+    }
+
+    var savedPopupSize: NSSize? {
+        if popupWidth.isNaN || popupHeight.isNaN { return nil }
+        return NSSize(width: popupWidth, height: popupHeight)
+    }
+
+    func setSavedPopupSize(_ size: NSSize?) {
+        if let s = size {
+            popupWidth = Double(s.width)
+            popupHeight = Double(s.height)
+        } else {
+            popupWidth = .nan
+            popupHeight = .nan
         }
     }
 

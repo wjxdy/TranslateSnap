@@ -24,6 +24,11 @@ struct GeneralSettingsView: View {
                         settings.setSavedFixedPosition(nil)
                     }
                 }
+                if settings.savedPopupSize != nil {
+                    Button("重置尺寸（回到内容自然大小）") {
+                        settings.setSavedPopupSize(nil)
+                    }
+                }
                 Toggle("默认钉住弹窗", isOn: $defaultPinned)
                 Text("钉住后点击外部与 ESC 都不会关闭；大头针按钮可在弹窗里切换。")
                     .font(.caption)

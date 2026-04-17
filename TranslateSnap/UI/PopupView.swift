@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct PopupRootView: View {
     @ObservedObject var viewModel: PopupSessionViewModel
@@ -59,34 +60,58 @@ struct PopupRootView: View {
     }
 }
 
-/// 右下角可拖动手柄，用于调整弹窗大小（top-left 保持不动）
-struct ResizeHandle: View {
-    var body: some View {
-        Image(systemName: "arrow.up.left.and.arrow.down.right")
-            .font(.system(size: 9, weight: .semibold))
-            .foregroundStyle(.tertiary)
-            .rotationEffect(.degrees(90))
-            .padding(6)
-            .frame(width: 20, height: 20)
-            .contentShape(Rectangle())
-            .onHover { inside in
-                if inside {
-                    NSCursor.crosshair.push()
-                } else {
-                    NSCursor.pop()
-                }
-            }
-            .gesture(
-                DragGesture(minimumDistance: 0, coordinateSpace: .local)
-                    .onChanged { value in
-                        PopupWindowController.shared.resizeBy(
-                            dx: value.translation.width,
-                            dy: value.translation.height
-                        )
-                    }
-                    .onEnded { _ in
-                        PopupWindowController.shared.resizeCommit()
-                    }
-            )
+/// 右下角可拖动手柄。直接用 NSView 处理鼠标事件，
+/// 并通过 `mouseDownCanMoveWindow = false` 避免被 `isMovableByWindowBackground` 吞掉 drag。
+struct ResizeHandle: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        ResizeHandleNSView(frame: NSRect(x: 0, y: 0, width: 18, height: 18))
+    }
+    func updateNSView(_ nsView: NSView, context: Context) {}
+}
+
+final class ResizeHandleNSView: NSView {
+    private var startTop: CGFloat?
+
+    override var mouseDownCanMoveWindow: Bool { false }
+
+    override func resetCursorRects() {
+        super.resetCursorRects()
+        addCursorRect(bounds, cursor: .crosshair)
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        guard let ctx = NSGraphicsContext.current?.cgContext else { return }
+        ctx.setStrokeColor(NSColor.tertiaryLabelColor.cgColor)
+        ctx.setLineWidth(1.2)
+        let pad: CGFloat = 4
+        // 画两条平行的 45° 斜线，提示可拖动
+        for offset in stride(from: CGFloat(0), through: CGFloat(6), by: 4) {
+            ctx.move(to: CGPoint(x: bounds.maxX - pad, y: bounds.minY + pad + offset))
+            ctx.addLine(to: CGPoint(x: bounds.minX + pad + offset, y: bounds.maxY - pad))
+        }
+        ctx.strokePath()
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        guard let window = window else { return }
+        startTop = window.frame.origin.y + window.frame.size.height
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard let window = window, let startTop = startTop else { return }
+        let minW: CGFloat = 280, minH: CGFloat = 160, maxW: CGFloat = 1000, maxH: CGFloat = 900
+        // event.deltaY 在 macOS 屏幕向下拖动时为 正值，正好对应"加高"
+        let newW = min(max(minW, window.frame.size.width + event.deltaX), maxW)
+        let newH = min(max(minH, window.frame.size.height + event.deltaY), maxH)
+        var frame = window.frame
+        frame.size = NSSize(width: newW, height: newH)
+        frame.origin.y = startTop - newH  // 保持顶部固定
+        window.setFrame(frame, display: true, animate: false)
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        defer { startTop = nil }
+        guard let window = window else { return }
+        AppSettings.shared.setSavedPopupSize(window.frame.size)
     }
 }
