@@ -91,10 +91,17 @@ struct PromptsSettingsView: View {
 }
 
 struct PromptEditorSheet: View {
-    @State var draft: PromptTab
+    @State private var draft: PromptTab
     let isNew: Bool
     let onCancel: () -> Void
     let onSave: (PromptTab) -> Void
+
+    init(draft: PromptTab, isNew: Bool, onCancel: @escaping () -> Void, onSave: @escaping (PromptTab) -> Void) {
+        self._draft = State(initialValue: draft)
+        self.isNew = isNew
+        self.onCancel = onCancel
+        self.onSave = onSave
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
