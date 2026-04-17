@@ -62,7 +62,8 @@ class HotkeyManager {
         // ESC 关闭弹窗
         if keyCode == 53 {
             Task { @MainActor in
-                self.activePopupController?.close()
+                guard let controller = self.activePopupController, !controller.isPinned else { return }
+                controller.close()
             }
             // 不消费 ESC，让其他 app 也能收到
             return Unmanaged.passRetained(event)

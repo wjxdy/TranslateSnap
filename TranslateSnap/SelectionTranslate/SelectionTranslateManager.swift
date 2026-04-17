@@ -15,18 +15,8 @@ class SelectionTranslateManager {
             alert.runModal()
             return
         }
-        let settings = AppSettings.shared
-        let request = TranslationRequest(
-            text: text,
-            targetLanguage: settings.targetLanguage,
-            style: settings.translationStyle,
-            systemPrompt: TranslationEngine.buildSystemPrompt(targetLanguage: settings.targetLanguage, style: settings.translationStyle)
-        )
-        let provider = TranslationEngine.provider(for: settings)
-        let viewModel = StreamingTranslationViewModel(original: text)
-        let popup = PopupWindowController.shared
-        popup.showStream(viewModel: viewModel, at: NSEvent.mouseLocation)
-        viewModel.start(stream: provider.translateStream(request))
+        let session = PopupSessionViewModel(originalText: text, trigger: .selection(cursor: NSEvent.mouseLocation))
+        PopupWindowController.shared.show(session: session)
     }
 
     private func getSelectedText() async -> String? {

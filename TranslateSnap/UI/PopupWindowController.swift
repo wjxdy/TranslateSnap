@@ -2,35 +2,19 @@ import AppKit
 import SwiftUI
 
 @MainActor
-class PopupWindowController {
+final class PopupWindowController {
     static let shared = PopupWindowController()
+
     private var panel: NSPanel?
+    private var session: PopupSessionViewModel?
     private var eventMonitor: Any?
+    private var moveObserver: NSObjectProtocol?
 
-    /// 划词翻译：弹窗在鼠标附近
-    func showStream(viewModel: StreamingTranslationViewModel, at point: NSPoint) {
-        let screenFrame = NSScreen.main?.visibleFrame ?? .zero
-        showStreamInternal(viewModel: viewModel) { constrainedSize in
-            var origin = NSPoint(x: point.x + 12, y: point.y - constrainedSize.height - 12)
-            origin.x = max(screenFrame.minX + 8, min(origin.x, screenFrame.maxX - constrainedSize.width - 8))
-            origin.y = max(screenFrame.minY + 8, min(origin.y, screenFrame.maxY - constrainedSize.height - 8))
-            return origin
-        }
-    }
+    var isPinned: Bool { session?.pinned ?? false }
 
-    /// 截图翻译：弹窗在屏幕中间偏上
-    func showStreamCentered(viewModel: StreamingTranslationViewModel) {
-        let screenFrame = NSScreen.main?.visibleFrame ?? .zero
-        showStreamInternal(viewModel: viewModel) { constrainedSize in
-            NSPoint(
-                x: screenFrame.midX - constrainedSize.width / 2,
-                y: screenFrame.midY + screenFrame.height * 0.1 - constrainedSize.height / 2
-            )
-        }
-    }
-
-    private func showStreamInternal(viewModel: StreamingTranslationViewModel, position: (NSSize) -> NSPoint) {
+    func show(session: PopupSessionViewModel) {
         close()
+        self.session = session
 
         let panel = NSPanel(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 240),
@@ -38,49 +22,157 @@ class PopupWindowController {
             backing: .buffered,
             defer: false
         )
-        panel.level = .floating
         panel.backgroundColor = .clear
         panel.isOpaque = false
         panel.hasShadow = true
+        panel.isMovableByWindowBackground = true
 
-        let popupView = StreamPopupView(viewModel: viewModel)
-        let hostingView = NSHostingView(rootView: popupView)
-        hostingView.frame = panel.contentView!.bounds
-        hostingView.autoresizingMask = [NSView.AutoresizingMask.width, NSView.AutoresizingMask.height]
-        panel.contentView?.addSubview(hostingView)
+        let root = PopupRootView(
+            viewModel: session,
+            onClose: { [weak self] in self?.close() },
+            onOpenSettings: { [weak self] in
+                self?.close()
+                (NSApp.delegate as? AppDelegate)?.openSettings()
+            }
+        )
+        let hosting = NSHostingView(rootView: root)
+        hosting.frame = panel.contentView!.bounds
+        hosting.autoresizingMask = [.width, .height]
+        panel.contentView?.addSubview(hosting)
 
-        // 在 layer 层做圆角，比 SwiftUI clipShape 更可靠
-        if let contentView = panel.contentView {
-            contentView.wantsLayer = true
-            contentView.layer?.cornerRadius = 12
-            contentView.layer?.masksToBounds = true
+        if let cv = panel.contentView {
+            cv.wantsLayer = true
+            cv.layer?.cornerRadius = 12
+            cv.layer?.masksToBounds = true
         }
 
         let maxHeight: CGFloat = 500
-        let fittingSize = hostingView.fittingSize
-        let constrainedSize = NSSize(
-            width: fittingSize.width,
-            height: min(fittingSize.height, maxHeight)
-        )
-        panel.setContentSize(constrainedSize)
-        panel.setFrameOrigin(position(constrainedSize))
+        let fitting = hosting.fittingSize
+        let size = NSSize(width: fitting.width, height: min(fitting.height, maxHeight))
+        panel.setContentSize(size)
+
+        let origin = computeOrigin(windowSize: size)
+        panel.setFrameOrigin(origin)
+
+        applyPin(session.pinned, panel: panel)
         panel.makeKeyAndOrderFront(nil)
+
+        moveObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didMoveNotification,
+            object: panel,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.handleDidMove() }
+        }
 
         self.panel = panel
         HotkeyManager.shared.activePopupController = self
+    }
 
+    func close() {
+        session?.cancelAll()
+        if let obs = moveObserver {
+            NotificationCenter.default.removeObserver(obs)
+            moveObserver = nil
+        }
+        removeGlobalMouseDownMonitor()
+        panel?.close()
+        panel = nil
+        session = nil
+        HotkeyManager.shared.activePopupController = nil
+    }
+
+    /// Called by PopupRootView.onChange(of: viewModel.pinned).
+    func pinStateDidChange(_ pinned: Bool) {
+        guard let panel = panel else { return }
+        applyPin(pinned, panel: panel)
+    }
+
+    // MARK: - Position
+
+    private func computeOrigin(windowSize: NSSize) -> NSPoint {
+        let settings = AppSettings.shared
+        let mode = settings.popupPositionMode
+        let screen = currentScreen(for: mode)
+        let visible = screen.visibleFrame
+
+        switch mode {
+        case .followCursor:
+            let cursor: NSPoint
+            if let session = session, case .selection(let c) = session.trigger {
+                cursor = c
+            } else {
+                cursor = NSEvent.mouseLocation
+            }
+            let p = NSPoint(x: cursor.x + 12, y: cursor.y - windowSize.height - 12)
+            return constrain(p, size: windowSize, to: visible)
+
+        case .fixed:
+            if let saved = settings.savedFixedPosition {
+                return constrain(saved, size: windowSize, to: visible)
+            }
+            return NSPoint(
+                x: visible.midX - windowSize.width / 2,
+                y: visible.midY + visible.height * 0.1 - windowSize.height / 2
+            )
+        }
+    }
+
+    private func currentScreen(for mode: PopupPositionMode) -> NSScreen {
+        switch mode {
+        case .followCursor:
+            let mouse = NSEvent.mouseLocation
+            return NSScreen.screens.first(where: { $0.frame.contains(mouse) }) ?? NSScreen.main ?? NSScreen.screens[0]
+        case .fixed:
+            if let saved = AppSettings.shared.savedFixedPosition,
+               let screen = NSScreen.screens.first(where: { $0.frame.contains(saved) }) {
+                return screen
+            }
+            return NSScreen.main ?? NSScreen.screens[0]
+        }
+    }
+
+    private func constrain(_ origin: NSPoint, size: NSSize, to frame: NSRect) -> NSPoint {
+        let x = max(frame.minX + 8, min(origin.x, frame.maxX - size.width - 8))
+        let y = max(frame.minY + 8, min(origin.y, frame.maxY - size.height - 8))
+        return NSPoint(x: x, y: y)
+    }
+
+    private func handleDidMove() {
+        guard let panel = panel else { return }
+        let settings = AppSettings.shared
+        // Only persist drag position in fixed mode, and only when not pinned
+        // (pinned drags are transient by design).
+        guard settings.popupPositionMode == .fixed,
+              !(session?.pinned ?? false)
+        else { return }
+        settings.setSavedFixedPosition(panel.frame.origin)
+    }
+
+    // MARK: - Pin
+
+    private func applyPin(_ pinned: Bool, panel: NSPanel) {
+        panel.level = pinned ? .statusBar : .floating
+        if pinned {
+            removeGlobalMouseDownMonitor()
+        } else {
+            installGlobalMouseDownMonitor()
+        }
+    }
+
+    // MARK: - Outside click monitor
+
+    private func installGlobalMouseDownMonitor() {
+        if eventMonitor != nil { return }
         eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             Task { @MainActor in self?.close() }
         }
     }
 
-    func close() {
-        panel?.close()
-        panel = nil
-        if let monitor = eventMonitor {
-            NSEvent.removeMonitor(monitor)
+    private func removeGlobalMouseDownMonitor() {
+        if let m = eventMonitor {
+            NSEvent.removeMonitor(m)
             eventMonitor = nil
         }
-        HotkeyManager.shared.activePopupController = nil
     }
 }

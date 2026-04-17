@@ -46,17 +46,8 @@ class ScreenshotCaptureManager {
     private func captureAndTranslate(image: NSImage) async {
         do {
             let text = try await OCRService.recognize(image: image)
-            let settings = AppSettings.shared
-            let request = TranslationRequest(
-                text: text,
-                targetLanguage: settings.targetLanguage,
-                style: settings.translationStyle,
-                systemPrompt: TranslationEngine.buildSystemPrompt(targetLanguage: settings.targetLanguage, style: settings.translationStyle)
-            )
-            let provider = TranslationEngine.provider(for: settings)
-            let viewModel = StreamingTranslationViewModel(original: text)
-            PopupWindowController.shared.showStreamCentered(viewModel: viewModel)
-            viewModel.start(stream: provider.translateStream(request))
+            let session = PopupSessionViewModel(originalText: text, trigger: .screenshot)
+            PopupWindowController.shared.show(session: session)
         } catch {
             showError(error.localizedDescription)
         }
