@@ -123,7 +123,7 @@ class AppSettings: ObservableObject {
         get {
             guard !promptTabsJSON.isEmpty,
                   let data = promptTabsJSON.data(using: .utf8),
-                  let tabs = try? JSONDecoder().decode([PromptTab].self, from: data)
+                  var tabs = try? JSONDecoder().decode([PromptTab].self, from: data)
             else {
                 let defaults = PromptTab.builtinDefaults
                 if let data = try? JSONEncoder().encode(defaults),
@@ -131,6 +131,18 @@ class AppSettings: ObservableObject {
                     promptTabsJSON = s
                 }
                 return defaults
+            }
+            // 迁移：补齐缺失的内置标签（按固定 UUID 去重）。已存在的（含用户已隐藏的）不动。
+            let existingIDs = Set(tabs.map { $0.id })
+            var appended = false
+            for builtin in PromptTab.builtinDefaults where !existingIDs.contains(builtin.id) {
+                tabs.append(builtin)
+                appended = true
+            }
+            if appended,
+               let data = try? JSONEncoder().encode(tabs),
+               let s = String(data: data, encoding: .utf8) {
+                promptTabsJSON = s
             }
             return tabs
         }

@@ -9,10 +9,7 @@ class SelectionTranslateManager {
         let text = await getSelectedText()
         NSLog("[TranslateSnap] selected text: \(text ?? "<nil>")")
         guard let text = text, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            let alert = NSAlert()
-            alert.messageText = "未获取到选中文字"
-            alert.informativeText = "请先选中一段文字再触发划词翻译"
-            alert.runModal()
+            NSLog("[TranslateSnap] 划词翻译：没有选中文字，静默返回")
             return
         }
         let session = PopupSessionViewModel(originalText: text, trigger: .selection(cursor: NSEvent.mouseLocation))

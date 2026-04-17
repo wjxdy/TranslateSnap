@@ -46,10 +46,14 @@ class ScreenshotCaptureManager {
     private func captureAndTranslate(image: NSImage) async {
         do {
             let text = try await OCRService.recognize(image: image)
+            guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                NSLog("[TranslateSnap] 截图翻译：OCR 无文字，静默返回")
+                return
+            }
             let session = PopupSessionViewModel(originalText: text, trigger: .screenshot)
             PopupWindowController.shared.show(session: session)
         } catch {
-            showError(error.localizedDescription)
+            NSLog("[TranslateSnap] 截图翻译失败：\(error.localizedDescription)")
         }
     }
 
